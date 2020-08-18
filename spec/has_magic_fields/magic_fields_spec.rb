@@ -112,9 +112,9 @@ describe HasMagicFields do
     end
 
     it "allows a pretty display name to be set" do
-      @charlie.create_magic_field(name: "zip", pretty_name: "Zip Code")
+      @charlie.create_magic_field(name: "zip", label: "Zip Code")
 
-      expect(@charlie.magic_fields.last.pretty_name).to eq("Zip Code")
+      expect(@charlie.magic_fields.last.label).to eq("Zip Code")
     end
 
     it "allows to be reloaded" do

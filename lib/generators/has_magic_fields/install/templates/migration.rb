@@ -8,8 +8,7 @@ class AddHasMagicFieldsTables < migrate
   def change
     create_table :magic_fields do |t|
       t.column :name, :string
-      t.column :pretty_name, :string
-      t.column :pretty_name_cn, :string
+      t.column :label, :string
       t.column :datatype, :string, default: "string"
       t.column :default, :string
       t.column :required, :boolean, default: false
