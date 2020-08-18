@@ -156,7 +156,6 @@ parent @account also haven't salary magic field
 * Benchmark and optimize
 * Add robocop style
 * Remove lambdas from specs
-* Fix type in create_magic_filed
 
 ## Changelog (Done)
 
@@ -166,6 +165,7 @@ parent @account also haven't salary magic field
 * Update migration template
 * Add spec :on_potential_false_positives
 * magic_attributes are only saved when calling #save 
+* Fix #create_magic_filed
 
 Maintainers
 ===========
