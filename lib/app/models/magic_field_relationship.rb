@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 class MagicFieldRelationship < ActiveRecord::Base
   belongs_to :magic_field
-  belongs_to :owner, :polymorphic => true
-  #belongs_to :extended_model, :polymorphic => true
+  belongs_to :owner, polymorphic: true
+  # belongs_to :extended_model, :polymorphic => true
   validates_uniqueness_of :name, scope: [:owner_id, :owner_type, :type_scoped]
   validates_presence_of :name, :type_scoped
 
@@ -11,5 +13,4 @@ class MagicFieldRelationship < ActiveRecord::Base
     self.name = magic_field.name
     self.type_scoped = magic_field.type_scoped.blank? ? self.owner_type : magic_field.type_scoped
   end
-
 end

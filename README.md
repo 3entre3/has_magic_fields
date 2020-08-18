@@ -44,19 +44,17 @@ end
 Add magic fields to your model:
 
 ```ruby
-@charlie = Person.create(:email => "charlie@example.com")
-@charlie.create_magic_field(:name => "first_name")
+@charlie = Person.create(email: "charlie@example.com")
+@charlie.create_magic_field(name: "first_name")
 ```
 
 Supply additional options if you have more specific requirements for your fields:
 
 ```ruby
-@charlie.create_magic_field(:name => "last_name", :is_required => true)
-@charlie.create_magic_field(:name => "birthday", :datatype => :date)
-@charlie.create_magic_field(:name => "salary", :default => "40000", :pretty_name => "Yearly Salary")
+@charlie.create_magic_field(name: "last_name", is_required: true)
+@charlie.create_magic_field(name: "birthday", datatype: :date)
+@charlie.create_magic_field(name: "salary", default: "40000", pretty_name: "Yearly Salary")
 ```
-
-The `:datatype` option supports: `:check_box_boolean`, `:date`, `:datetime`, `:integer`
 
 Use your new fields just like you would with any other ActiveRecord attribute:
 
@@ -72,9 +70,9 @@ Find @charlie and inspect him:
 ```ruby
 @charlie = User.find(@charlie.id)
 @charlie.first_name #=> "Charlie"
-@charlie.last_name  #=> "Magic!"
+@charlie.last_name #=> "Magic!"
 @charlie.birthday #=> #<Date: 4908497/2,0,2299161>
-@charlie.salary     #=> "40000", this is from :salary having a :default
+@charlie.salary #=> "40000", this is from :salary having a :default
 ```
 
 ## Inherited Model
@@ -88,7 +86,7 @@ class Account < ActiveRecord::Base
   has_many :users
   has_magic_fields
 end
-@account = Account.create(:name => "BobCorp",:type_scoped => "User")
+@account = Account.create(name: "BobCorp", type_scoped: "User")
 ```
 
 And declare the child as having magic fields :through the parent.
@@ -97,9 +95,9 @@ And declare the child as having magic fields :through the parent.
 class User < ActiveRecord::Base
   include HasMagicFields::Extend
   belongs_to :account
-  has_magic_fields :through => :account
+  has_magic_fields through: :account
 end
-@alice = User.create(:name => "alice", :account => @account)
+@alice = User.create(name: "alice", account: @account)
 ```
 
 To see all the magic fields available for a type_scoped(User) child from its parent:
@@ -112,16 +110,16 @@ To add magic fields, go through the parent or child:
 
 ```ruby
 @alice.create_magic_field(...)
-@account.create_magic_field(…,:type_scoped => "User")
+@account.create_magic_field(…, type_scoped: "User")
 ```
 
 All User children for a given parent will have access to the same magic fields:
 
 ```ruby
-@alice.create_magic_field(:name => "salary")
+@alice.create_magic_field(name: "salary")
 @alice.salary = "40000"
 
-@bob = User.create(:name => "bob", :account => @account)
+@bob = User.create(name: "bob", account: @account)
 # Magic! No need to add the column again!
 @bob.salary = "50000"
 ```
@@ -135,10 +133,10 @@ the other modle Inherited from Account
 class Product < ActiveRecord::Base
   include HasMagicFields::Extend
   belongs_to :account
-  has_magic_fields :through => :account
+  has_magic_fields through: :account
 end
 
-@product = Product.create(:name => "car", :account => @account)
+@product = Product.create(name: "car", account: @account)
 ```
 @product haven't salary magic field, @product.salary should raise NoMethodError
 
@@ -154,8 +152,6 @@ parent @account also haven't salary magic field
 ## To Do
 
 * Benchmark and optimize
-* Add robocop style
-* Remove lambdas from specs
 
 ## Changelog (Done)
 
@@ -166,6 +162,8 @@ parent @account also haven't salary magic field
 * Add spec :on_potential_false_positives
 * magic_attributes are only saved when calling #save 
 * Fix #create_magic_filed
+* Add rubocop
+* Remove lambdas from specs
 
 Maintainers
 ===========
