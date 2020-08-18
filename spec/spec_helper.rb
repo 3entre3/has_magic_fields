@@ -1,5 +1,3 @@
-
-require 'debugger'
 require 'database_cleaner'
 require 'rubygems'
 require "active_record"
@@ -10,6 +8,7 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'rails'))
 require "init"
 
+require "rails"
 require "rails/railtie"
 
 module Rails
@@ -52,9 +51,11 @@ ActiveRecord::Schema.define do
   
 end
 
-
 RSpec.configure do |config|
-  
+  config.expect_with :rspec do |c|
+    c.on_potential_false_positives = :nothing
+  end
+
   config.before(:all) do
     class Account < ActiveRecord::Base
       include HasMagicFields::Extend

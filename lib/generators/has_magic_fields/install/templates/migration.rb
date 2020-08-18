@@ -1,4 +1,8 @@
-class AddHasMagicFieldsTables < ActiveRecord::Migration
+migrate = Rails.version&.to_i >= 5 ?
+  ActiveRecord::Migration["#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}"] :
+    ActiveRecord::Migration
+
+class AddHasMagicFieldsTables < migrate
   def change
     create_table :magic_fields do |t|
       t.column :name,           :string

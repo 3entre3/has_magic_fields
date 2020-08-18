@@ -8,34 +8,15 @@ class MagicField < ActiveRecord::Base
 
   before_save :set_pretty_name
 
-  def self.datatypes
-    ["string","check_box_boolean", "date", "datetime", "integer"]
+  def type_cast(value)
+    type = ActiveRecord::Type.lookup(datatype.to_sym)
+    ActiveModel::Attribute.from_database(name, value, type).value
+  rescue
+    value
   end
 
-  def type_cast(value)
-    begin
-      case datatype.to_sym
-        when :string
-          value
-        when :check_box_boolean
-          (value.to_int == 1) ? true : false 
-        when :date
-          Date.parse(value)
-        when :datetime
-          Time.parse(value)
-        when :integer
-          value.to_int
-      else
-        value
-      end
-    rescue
-      value
-    end
-  end
-  
   # Display a nicer (possibly user-defined) name for the column or use a fancified default.
   def set_pretty_name
     self.pretty_name = name.humanize if  pretty_name.blank?
   end
-  
 end
