@@ -41,8 +41,8 @@ describe HasMagicFields do
       expect(@charlie.salary).not_to be(nil)
     end
 
-    it "forces required if is_required is true" do
-      @charlie.create_magic_field(name: "last_name", is_required: true)
+    it "forces required if required is true" do
+      @charlie.create_magic_field(name: "last_name", required: true)
 
       expect(@charlie.save).to be(false)
       @charlie.last_name = "zongsi"

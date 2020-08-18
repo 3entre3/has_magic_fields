@@ -70,7 +70,7 @@ module HasMagicFields
       def valid?(context = nil)
         output = super(context)
         magic_fields_with_scoped.each do |field|
-          if field.is_required?
+          if field.required?
             validates_presence_of(field.name)
           end
         end
