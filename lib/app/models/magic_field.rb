@@ -8,7 +8,7 @@ class MagicField < ActiveRecord::Base
   validates_presence_of :name, :datatype
   validates_format_of :name, with: /\A[a-z][a-z0-9_]+\z/
 
-  before_save :set_pretty_name
+  before_save :set_label
 
   def type_cast(value)
     type = ActiveRecord::Type.lookup(datatype.to_sym)
@@ -17,8 +17,7 @@ class MagicField < ActiveRecord::Base
     value
   end
 
-  # Display a nicer (possibly user-defined) name for the column or use a fancified default.
-  def set_pretty_name
-    self.pretty_name = name.humanize if  pretty_name.blank?
+  def set_label
+    self.label = name.humanize if label.blank?
   end
 end

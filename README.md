@@ -53,7 +53,7 @@ Supply additional options if you have more specific requirements for your fields
 ```ruby
 @charlie.create_magic_field(name: "last_name", required: true)
 @charlie.create_magic_field(name: "birthday", datatype: :date)
-@charlie.create_magic_field(name: "salary", default: "40000", pretty_name: "Yearly Salary")
+@charlie.create_magic_field(name: "salary", default: "40000", label: "Yearly Salary")
 ```
 
 Use your new fields just like you would with any other ActiveRecord attribute:
@@ -164,7 +164,9 @@ parent @account also haven't salary magic field
 * Fix #create_magic_filed
 * Add rubocop
 * Remove lambdas from specs
-* Use required keyword
+* Use required instead is_required
+* Use label instead pretty_name
+* Remove pretty_name_*
 * Support for migration[version]
 
 Maintainers
