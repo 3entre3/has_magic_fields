@@ -1,10 +1,12 @@
-require 'rails/generators/base'
+# frozen_string_literal: true
+
+require "rails/generators/base"
 
 module HasMagicFields
   class InstallGenerator < Rails::Generators::Base
     include Rails::Generators::Migration
 
-    source_root File.expand_path('../templates',__FILE__)
+    source_root File.expand_path("../templates", __FILE__)
 
     desc "Add has_magic_fields migration."
 
