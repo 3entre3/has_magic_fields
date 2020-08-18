@@ -1,3 +1,6 @@
+# Development/Update in progress
+Hard fork of [has_magic_fields](https://github.com/ikeqiao/has_magic_fields)
+
 # HasMagicFields
 [![Gem Version](https://badge.fury.io/rb/has_magic_fields.png)](http://badge.fury.io/rb/has_magic_fields)
 [![CI Status](https://travis-ci.org/ikeqiao/has_magic_fields.svg)](https://travis-ci.org/ikeqiao/has_magic_fields)
@@ -148,12 +151,21 @@ parent @account also haven't salary magic field
 @account.magic_fields_with_scoped("User") #get all meagic_fields User model
 ```
 
-##To Do
+## To Do
 
-Here's a short list of things that need to be done to polish up this gem:
-
-* more data_type sppuort
 * Benchmark and optimize
+* Add robocop style
+* Remove lambdas from specs
+* Fix type in create_magic_filed
+
+## Changelog (Done)
+
+* More datatype support (with ActiveRecord::Type.lookup)
+* Use to_i instead of to_int
+* Remove self.datatypes (with ActiveRecord::Type.lookup it is no longer necessary)
+* Update migration template
+* Add spec :on_potential_false_positives
+* magic_attributes are only saved when calling #save 
 
 Maintainers
 ===========

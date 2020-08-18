@@ -1,8 +1,6 @@
-require 'spec_helper'
-
+require "spec_helper"
 
 describe HasMagicFields do
-
   context "on a single model" do
     before(:each) do
       @charlie = Person.create(name: "charlie")
@@ -48,24 +46,49 @@ describe HasMagicFields do
       @charlie.create_magic_filed(:name => "birthday", :datatype => :date)
       @charlie.birthday = Date.today
       expect(@charlie.save).to be(true)
+      expect(@charlie.birthday.class.name).to eq("Date")
     end
 
     it "allows datatype to be :datetime" do
       @charlie.create_magic_filed(:name => "signed_up_at", :datatype => :datetime)
       @charlie.signed_up_at = DateTime.now
       expect(@charlie.save).to be(true)
+      expect(@charlie.signed_up_at.class.name).to eq("Time")
     end
 
     it "allows datatype to be :integer" do
       @charlie.create_magic_filed(:name => "age", :datatype => :integer)
       @charlie.age = 5
       expect(@charlie.save).to be(true)
+      expect(@charlie.age.class.name).to eq("Integer")
     end
 
-    it "allows datatype to be :check_box_boolean" do
-      @charlie.create_magic_filed(:name => "retired", :datatype => :check_box_boolean)
+    it "casts datatype to :integer" do
+      @charlie.create_magic_filed(:name => "age", :datatype => :integer)
+      @charlie.age = "no_integer"
+      expect(@charlie.save).to be(true)
+      expect(@charlie.age).to eq(0)
+    end
+
+    it "allows datatype to be :boolean" do
+      @charlie.create_magic_filed(:name => "retired", :datatype => :boolean)
       @charlie.retired = false
       expect(@charlie.save).to be(true)
+      expect(@charlie.retired).to be(false)
+    end
+
+    it "allows datatype to be :boolean valid" do
+      @charlie.create_magic_filed(:name => "retired", :datatype => :boolean)
+      @charlie.retired = "t"
+      expect(@charlie.save).to be(true)
+      expect(@charlie.retired).to be(true)
+    end
+
+    it "allows datatype to be :float" do
+      @charlie.create_magic_filed(:name => "number", :datatype => :float)
+      @charlie.number = "10.51"
+      expect(@charlie.save).to be(true)
+      expect(@charlie.number).to be(10.51)
     end
 
     it "allows default to be set" do
@@ -76,6 +99,14 @@ describe HasMagicFields do
     it "allows a pretty display name to be set" do
       @charlie.create_magic_filed(:name => "zip", :pretty_name => "Zip Code")
       expect(@charlie.magic_fields.last.pretty_name).to eq("Zip Code")
+    end
+
+    it "allows to be reloaded" do
+      @charlie.create_magic_filed(:name => "age", :datatype => :integer)
+      @charlie.age = 12
+      @charlie.save
+
+      expect(@charlie.reload.age).to eq(12)
     end
   end
 
@@ -137,14 +168,6 @@ describe HasMagicFields do
       expect(lambda{@bob.create_magic_filed(:name => 'salary')}).to raise_error
       expect(lambda{@product.create_magic_filed(:name => 'salary')}).not_to raise_error
       expect(lambda{@account.create_magic_filed(:name => 'salary')}).not_to raise_error
-    end
-  end
-
-  context "magic_field class method" do
-    it "datatypes method" do
-      expect(MagicField.datatypes.class).to be(Array)
-      expect(MagicField.datatypes.size).to eq(4)
-      expect(MagicField.datatypes.first).to eq("check_box_boolean")
     end
   end
 end

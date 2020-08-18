@@ -99,14 +99,19 @@ module HasMagicFields
       end
       
       def create_magic_attribute(magic_field, value)
-        magic_attributes << MagicAttribute.create(:magic_field => magic_field, :value => value)
+        magic_attributes << MagicAttribute.new(:magic_field => magic_field, :value => value)
       end
       
       def update_magic_attribute(magic_attribute, value)
         magic_attribute.update_attributes(:value => value)
       end
-    end
 
+      def save(*opts)
+        super.tap {
+          magic_attributes.each { |m| m.save }
+        }
+      end
+    end
 
     %w{ models }.each do |dir|
       path = File.join(File.dirname(__FILE__), '../app', dir)
@@ -114,7 +119,6 @@ module HasMagicFields
       ActiveSupport::Dependencies.autoload_paths << path
       ActiveSupport::Dependencies.autoload_once_paths.delete(path)
     end
-    
   end
 end
 
