@@ -27,7 +27,6 @@ class AddHasMagicFieldsTables < migrate
       t.column :updated_at, :datetime
     end
 
-
     create_table :magic_field_relationships do |t|
       t.column :magic_field_id, :integer
       t.column :owner_id, :integer
