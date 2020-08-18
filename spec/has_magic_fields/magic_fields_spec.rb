@@ -174,7 +174,7 @@ describe HasMagicFields do
       expect(@alice.birthday).not_to eq(@bob.birthday)
     end
 
-    it "defferent model has defferent scope" do
+    it "different model has different scope" do
       @alice.create_magic_field(name: "salary")
 
       expect { @alice.salary }.not_to raise_error
@@ -195,6 +195,12 @@ describe HasMagicFields do
       expect { @bob.create_magic_field(name: "salary") }.to raise_error
       expect { @product.create_magic_field(name: "salary") }.not_to raise_error
       expect { @account.create_magic_field(name: "salary") }.not_to raise_error
+    end
+
+    it "ignores when belongs_to is missing" do
+      @account.create_magic_field(name: "age", type_scoped: "User")
+
+      expect { Product.create(name: "some") }.not_to raise_error
     end
   end
 end
