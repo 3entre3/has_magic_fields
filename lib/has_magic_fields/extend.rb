@@ -11,7 +11,7 @@ module HasMagicFields
       def has_magic_fields(options = {})
         # Associations
         has_many :magic_attribute_relationships, as: :owner, dependent: :destroy
-        has_many :magic_attributes, through: :magic_attribute_relationships, dependent: :destroy
+        has_many :magic_attributes, autosave: true, through: :magic_attribute_relationships, dependent: :destroy
 
         # Inheritence
         cattr_accessor :inherited_from
@@ -83,8 +83,8 @@ module HasMagicFields
       def read_magic_attribute(field_name)
         field = find_magic_field_by_name(field_name)
         attribute = find_magic_attribute_by_field(field)
-        value = (attr = attribute.first) ?  attr.to_s : field.default
-        value.nil?  ? nil : field.type_cast(value)
+        value = (attr = attribute.first) ? attr.to_s : field.default
+        value.nil? ? nil : field.type_cast(value)
       end
 
       def write_magic_attribute(field_name, value)
@@ -102,17 +102,14 @@ module HasMagicFields
       end
 
       def create_magic_attribute(magic_field, value)
-        magic_attributes << MagicAttribute.new(magic_field: magic_field, value: value)
+        magic_attribute = MagicAttribute.new(magic_field: magic_field, value: value)
+        magic_attributes.build(magic_attribute.attributes)
+        magic_attribute
       end
 
       def update_magic_attribute(magic_attribute, value)
-        magic_attribute.update_attributes(value: value)
-      end
-
-      def save(*opts)
-        super.tap {
-          magic_attributes.each { |m| m.save }
-        }
+        magic_attribute.value = value
+        magic_attribute
       end
     end
 
