@@ -54,7 +54,8 @@ module HasMagicFields
         super(method_id, *args)
       rescue NoMethodError
         method_name = method_id.to_s
-        super(method_id, *args) unless magic_field_names.include?(method_name) || ((md = /[\?|\=]/.match(method_name)) && magic_field_names.include?(md.pre_match))
+        names = magic_field_names
+        super(method_id, *args) unless names.include?(method_name) || ((md = /[\?|\=]/.match(method_name)) && names.include?(md.pre_match))
 
         if /=$/.match?(method_name)
           var_name = method_name.gsub("=", "")
@@ -81,30 +82,41 @@ module HasMagicFields
 
       # Load the MagicAttribute(s) associated with attr_name and cast them to proper type.
       def read_magic_attribute(field_name)
-        field = find_magic_field_by_name(field_name)
-        attribute = find_magic_attribute_by_field(field)
-        value = (attr = attribute.first) ? attr.to_s : field.default
-        value.nil? ? nil : field.type_cast(value)
+        attribute = find_or_initialize_magic_attribute(field_name)
+        value = attribute.value.presence || attribute.magic_field.default
+        return unless value.present?
+
+        attribute.magic_field.type_cast(value)
       end
 
       def write_magic_attribute(field_name, value)
-        field = find_magic_field_by_name(field_name)
-        attribute = find_magic_attribute_by_field(field)
-        (attr = attribute.first) ? update_magic_attribute(attr, value) : create_magic_attribute(field, value)
+        attribute = find_or_initialize_magic_attribute(field_name)
+        return update_magic_attribute(attribute, value) if in_magic_attributes?(attribute)
+
+        create_magic_attribute(attribute, value)
       end
 
       def find_magic_attribute_by_field(field)
-        magic_attributes.to_a.find_all { |attr| attr.magic_field_id == field.id }
+        magic_attributes.to_a.find { |attr| attr.magic_field_id == field.id }
       end
 
       def find_magic_field_by_name(attr_name)
         magic_fields_with_scoped.to_a.find { |column| column.name == attr_name }
       end
 
-      def create_magic_attribute(magic_field, value)
-        magic_attribute = MagicAttribute.new(magic_field: magic_field, value: value)
-        magic_attributes.build(magic_attribute.attributes)
+      def find_or_initialize_magic_attribute(field_name)
+        field = find_magic_field_by_name(field_name)
+        attribute = find_magic_attribute_by_field(field)
+        attribute || MagicAttribute.new(magic_field: field)
+      end
+
+      def create_magic_attribute(magic_attribute, value)
+        magic_attributes.build(magic_field: magic_attribute.magic_field, value: value)
         magic_attribute
+      end
+
+      def in_magic_attributes?(attribute)
+        attribute.persisted? || magic_attributes.include?(attribute)
       end
 
       def update_magic_attribute(magic_attribute, value)

@@ -63,6 +63,18 @@ describe HasMagicFields do
       expect(@charlie.reload.salary).not_to be(nil)
     end
 
+    it "saves only one record" do
+      @charlie.create_magic_field(name: "salary")
+      @charlie.salary = 50000
+      @charlie.salary = 20000
+
+      expect {
+        @charlie.save
+      }.to change(MagicAttribute, :count).by(1)
+
+      expect(Person.find(@charlie.id).salary).to eq("20000")
+    end
+
     it "forces required if required is true" do
       @charlie.create_magic_field(name: "last_name", required: true)
 
@@ -239,7 +251,7 @@ describe HasMagicFields do
     end
   end
 
-  xcontext "N + 1 safety" do
+  xcontext "N + 1" do
     it "doesn't send unnecessary requests in setter" do
       charlie = Person.create(name: "charlie")
       charlie.create_magic_field(name: "salary", datatype: :integer)
