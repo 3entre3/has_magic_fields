@@ -68,6 +68,10 @@ module HasMagicFields
         super
       end
 
+      def read_attribute_for_validation(attribute)
+        super if attributes.include?(attribute) || magic_attributes.present?
+      end
+
       def respond_to_missing?(method_id, include_private = false)
         method_name = method_id.to_s.delete("=")
         magic_field_names.include?(method_name) || super

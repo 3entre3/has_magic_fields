@@ -252,42 +252,55 @@ describe HasMagicFields do
   end
 
   context "N + 1" do
-    it "doesn't send unnecessary requests in setter" do
-      charlie = Person.create(name: "charlie")
-      charlie.create_magic_field(name: "salary", datatype: :integer)
+    context "with empty calls" do
+      it "doesn't send unnecessary requests in #valid?" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer, required: true)
 
-      expect {
+        expect {
+          charlie.valid?
+        }.not_to exceed_query_limit(2)
+      end
+
+      it "doesn't send unnecessary requests in setter" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer)
+
+        expect {
+          charlie.salary = 12
+        }.not_to exceed_query_limit(3)
+      end
+
+      it "doesn't send unnecessary requests in reader" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer)
+
+        expect {
+          charlie.salary
+        }.not_to exceed_query_limit(2)
+      end
+    end
+
+    context "with previous calls" do
+      it "doesn't send unnecessary requests in reader when build MagicAttribute" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer)
         charlie.salary = 12
-      }.not_to exceed_query_limit(3)
-    end
 
-    it "doesn't send unnecessary requests in reader" do
-      charlie = Person.create(name: "charlie")
-      charlie.create_magic_field(name: "salary", datatype: :integer)
+        expect {
+          charlie.salary
+        }.not_to exceed_query_limit(1) # TODO optimize to 0 (with previous call)
+      end
 
-      expect {
-        charlie.salary
-      }.not_to exceed_query_limit(2)
-    end
+      it "doesn't send unnecessary requests in setter" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer)
+        charlie.salary = 1
 
-    it "doesn't send unnecessary requests in reader when build MagicAttribute" do
-      charlie = Person.create(name: "charlie")
-      charlie.create_magic_field(name: "salary", datatype: :integer)
-      charlie.salary = 12
-
-      expect {
-        charlie.salary
-      }.not_to exceed_query_limit(1) # TODO optimize to 0 (with previous call)
-    end
-
-    it "doesn't send unnecessary requests in setter" do
-      charlie = Person.create(name: "charlie")
-      charlie.create_magic_field(name: "salary", datatype: :integer)
-      charlie.salary = 1
-
-      expect {
-        charlie.salary = 2
-      }.not_to exceed_query_limit(1) # TODO optimize to 0 (with previous call)
+        expect {
+          charlie.salary = 2
+        }.not_to exceed_query_limit(1) # TODO optimize to 0 (with previous call)
+      end
     end
   end
 end
