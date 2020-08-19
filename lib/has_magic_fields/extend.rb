@@ -27,7 +27,7 @@ module HasMagicFields
               inherited.magic_fields
             end
           end
-          alias_method :magic_fields, :inherited_magic_fields unless method_defined? :magic_fields
+          alias_method :magic_fields, :inherited_magic_fields unless method_defined?(:magic_fields)
 
         # otherwise the calling model has the relationships
         else
@@ -42,7 +42,11 @@ module HasMagicFields
     included do
       def create_magic_field(options = {})
         type_scoped = options[:type_scoped].blank? ? self.class.name : options[:type_scoped].classify
-        self.magic_fields.create options.merge(type_scoped: type_scoped)
+        self.magic_fields.create(options.merge(type_scoped: type_scoped))
+      end
+
+      def magic_field_names(type_scoped = nil)
+        magic_fields_with_scoped(type_scoped).map(&:name)
       end
 
       def magic_fields_with_scoped(type_scoped = nil)
@@ -51,23 +55,22 @@ module HasMagicFields
       end
 
       def method_missing(method_id, *args)
-        super(method_id, *args)
-      rescue NoMethodError
         method_name = method_id.to_s
-        names = magic_field_names
-        super(method_id, *args) unless names.include?(method_name) || ((md = /[\?|\=]/.match(method_name)) && names.include?(md.pre_match))
 
-        if /=$/.match?(method_name)
-          var_name = method_name.gsub("=", "")
+        if method_name.end_with?("=")
+          var_name = method_name.delete("=")
           value = args.first
           write_magic_attribute(var_name, value)
         else
           read_magic_attribute(method_name)
         end
+      rescue NoMethodError
+        super
       end
 
-      def magic_field_names(type_scoped = nil)
-        magic_fields_with_scoped(type_scoped).map(&:name)
+      def respond_to_missing?(method_id, include_private = false)
+        method_name = method_id.to_s.delete("=")
+        magic_field_names.include?(method_name) || super
       end
 
       def valid?(context = nil)
@@ -80,20 +83,11 @@ module HasMagicFields
         errors.empty? && output
       end
 
-      # Load the MagicAttribute(s) associated with attr_name and cast them to proper type.
-      def read_magic_attribute(field_name)
-        attribute = find_or_initialize_magic_attribute(field_name)
-        value = attribute.value.presence || attribute.magic_field.default
-        return unless value.present?
+      private
 
-        attribute.magic_field.type_cast(value)
-      end
-
-      def write_magic_attribute(field_name, value)
-        attribute = find_or_initialize_magic_attribute(field_name)
-        return update_magic_attribute(attribute, value) if in_magic_attributes?(attribute)
-
-        create_magic_attribute(attribute, value)
+      def create_magic_attribute(magic_attribute, value)
+        magic_attributes.build(magic_field: magic_attribute.magic_field, value: value)
+        magic_attribute
       end
 
       def find_magic_attribute_by_field(field)
@@ -104,24 +98,36 @@ module HasMagicFields
         magic_fields_with_scoped.to_a.find { |column| column.name == attr_name }
       end
 
-      def find_or_initialize_magic_attribute(field_name)
+      def find_or_initialize_magic_attribute!(field_name)
         field = find_magic_field_by_name(field_name)
+        raise NoMethodError unless field.present?
+
         attribute = find_magic_attribute_by_field(field)
         attribute || MagicAttribute.new(magic_field: field)
-      end
-
-      def create_magic_attribute(magic_attribute, value)
-        magic_attributes.build(magic_field: magic_attribute.magic_field, value: value)
-        magic_attribute
       end
 
       def in_magic_attributes?(attribute)
         attribute.persisted? || magic_attributes.include?(attribute)
       end
 
+      def read_magic_attribute(field_name)
+        attribute = find_or_initialize_magic_attribute!(field_name)
+        value = attribute.value.presence || attribute.magic_field.default
+        return unless value.present?
+
+        attribute.magic_field.type_cast(value)
+      end
+
       def update_magic_attribute(magic_attribute, value)
         magic_attribute.value = value
         magic_attribute
+      end
+
+      def write_magic_attribute(field_name, value)
+        attribute = find_or_initialize_magic_attribute!(field_name)
+        return update_magic_attribute(attribute, value) if in_magic_attributes?(attribute)
+
+        create_magic_attribute(attribute, value)
       end
     end
 
