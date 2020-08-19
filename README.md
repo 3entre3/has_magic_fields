@@ -168,6 +168,7 @@ parent @account also haven't salary magic field
 * Use label instead pretty_name
 * Remove pretty_name_*
 * Support for migration[version]
+* Avoid (partially) N+1
 
 Maintainers
 ===========
