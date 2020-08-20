@@ -8,6 +8,8 @@ module HasMagicFields
     extend ActiveSupport::Concern
     include ActiveModel::Validations
     module ClassMethods
+      cattr_accessor :with_magic_fields, default: false
+
       def has_magic_fields(options = {})
         # Associations
         has_many :magic_attribute_relationships, as: :owner, dependent: :destroy
@@ -15,6 +17,8 @@ module HasMagicFields
 
         # Inheritence
         cattr_accessor :inherited_from
+
+        self.with_magic_fields = true
 
         # if options[:through] is supplied, treat as an inherited relationship
         if self.inherited_from = options[:through]
@@ -40,6 +44,10 @@ module HasMagicFields
     end
 
     included do
+      def magic_fields_cached
+        magic_fields.to_a
+      end
+
       def create_magic_field(options = {})
         type_scoped = options[:type_scoped].blank? ? self.class.name : options[:type_scoped].classify
         self.magic_fields.create(options.merge(type_scoped: type_scoped))
@@ -51,12 +59,15 @@ module HasMagicFields
 
       def magic_fields_with_scoped(type_scoped = nil)
         type_scoped = type_scoped.blank? ? self.class.name : type_scoped.classify
-        magic_fields_without_scoped.where(type_scoped: type_scoped)
+        magic_fields_cached.to_a.filter {|f| f.type_scoped == type_scoped}
       end
 
       def method_missing(method_id, *args)
-        method_name = method_id.to_s
+        super
+      rescue NoMethodError => err
+        raise err unless with_magic_fields?
 
+        method_name = method_id.to_s
         if method_name.end_with?("=")
           var_name = method_name.delete("=")
           value = args.first
@@ -64,27 +75,34 @@ module HasMagicFields
         else
           read_magic_attribute(method_name)
         end
-      rescue NoMethodError
-        super
       end
 
       def read_attribute_for_validation(attribute)
-        super if attributes.include?(attribute) || magic_attributes.present?
+        return super unless with_magic_fields?
+
+        super if methods.include?(attribute) || magic_attributes.present?
       end
 
       def respond_to_missing?(method_id, include_private = false)
         method_name = method_id.to_s.delete("=")
-        magic_field_names.include?(method_name) || super
+        fields = with_magic_fields? ? magic_field_names : []
+        fields.include?(method_name) || super
       end
 
       def valid?(context = nil)
         output = super(context)
-        magic_fields_with_scoped.each do |field|
-          if field.required?
-            validates_presence_of(field.name)
+        if with_magic_fields?
+          magic_fields_with_scoped.each do |field|
+            if field.required?
+              validates_presence_of(field.name)
+            end
           end
         end
         errors.empty? && output
+      end
+
+      def with_magic_fields?
+        self.class.with_magic_fields
       end
 
       private
