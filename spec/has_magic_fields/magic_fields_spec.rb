@@ -259,7 +259,7 @@ describe HasMagicFields do
 
         expect {
           charlie.valid?
-        }.not_to exceed_query_limit(2)
+        }.not_to exceed_query_limit(1)
       end
 
       it "doesn't send unnecessary requests in setter" do
@@ -268,7 +268,7 @@ describe HasMagicFields do
 
         expect {
           charlie.salary = 12
-        }.not_to exceed_query_limit(3)
+        }.not_to exceed_query_limit(2)
       end
 
       it "doesn't send unnecessary requests in reader" do
@@ -277,7 +277,7 @@ describe HasMagicFields do
 
         expect {
           charlie.salary
-        }.not_to exceed_query_limit(2)
+        }.not_to exceed_query_limit(1)
       end
     end
 
@@ -289,7 +289,7 @@ describe HasMagicFields do
 
         expect {
           charlie.salary
-        }.not_to exceed_query_limit(1) # TODO optimize to 0 (with previous call)
+        }.not_to exceed_query_limit(0)
       end
 
       it "doesn't send unnecessary requests in setter" do
@@ -299,7 +299,7 @@ describe HasMagicFields do
 
         expect {
           charlie.salary = 2
-        }.not_to exceed_query_limit(1) # TODO optimize to 0 (with previous call)
+        }.not_to exceed_query_limit(0)
       end
     end
   end
