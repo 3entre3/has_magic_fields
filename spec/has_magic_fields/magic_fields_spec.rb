@@ -32,13 +32,47 @@ describe HasMagicFields do
       expect(before_fields_count).to eq(after_fields_count)
     end
 
+    it "doesn't saved unless #save is called" do
+      @charlie.create_magic_field(name: "salary", datatype: :integer)
+      @charlie.salary = 500
+
+      expect(Person.find(@charlie.id).salary).to be(nil)
+    end
+
+    it "doesn't updated unless #save is called" do
+      @charlie.create_magic_field(name: "salary", datatype: :integer)
+      @charlie.salary = 100
+      @charlie.save
+      @charlie.salary = 200
+
+      charlie = Person.find(@charlie.id)
+      charlie.salary = 500
+
+      expect(@charlie.salary).to eq(200)
+      expect(charlie.salary).to eq(500)
+      expect(charlie.reload.salary).to eq(100)
+      expect(Person.find(@charlie.id).salary).to eq(100)
+    end
+
     it "allows setting and saving of magic attributes" do
       @charlie.create_magic_field(name: "salary")
       @charlie.salary = 50000
       @charlie.save
       @charlie = Person.find(@charlie.id)
 
-      expect(@charlie.salary).not_to be(nil)
+      expect(@charlie.reload.salary).not_to be(nil)
+    end
+
+    it "saves only one record" do
+      @charlie.create_magic_field(name: "salary")
+      @charlie.salary = 50000
+      @charlie.salary = 20000
+
+      expect {
+        @charlie.save
+      }.to change(MagicAttribute, :count).by(1)
+
+      expect(Person.find(@charlie.id).salary).to eq("20000")
     end
 
     it "forces required if required is true" do
@@ -51,15 +85,20 @@ describe HasMagicFields do
 
     it "allows datatype to be :date" do
       @charlie.create_magic_field(name: "birthday", datatype: :date)
+      today = Date.today
       @charlie.birthday = Date.today
 
+      expect(@charlie.birthday).to eq(today)
       expect(@charlie.save).to be(true)
       expect(@charlie.birthday.class.name).to eq("Date")
+      expect(@charlie.birthday).to eq(today)
+      expect(Person.find(@charlie.id).birthday).to eq(today)
     end
 
     it "allows datatype to be :datetime" do
       @charlie.create_magic_field(name: "signed_up_at", datatype: :datetime)
-      @charlie.signed_up_at = DateTime.now
+      now = DateTime.now
+      @charlie.signed_up_at = now
 
       expect(@charlie.save).to be(true)
       expect(@charlie.signed_up_at.class.name).to eq("Time")
@@ -69,15 +108,19 @@ describe HasMagicFields do
       @charlie.create_magic_field(name: "age", datatype: :integer)
       @charlie.age = 5
 
+      expect(@charlie.age).to eq(5)
       expect(@charlie.save).to be(true)
       expect(@charlie.age.class.name).to eq("Integer")
+      expect(Person.find(@charlie.id).age).to eq(5)
     end
 
     it "casts datatype to :integer" do
       @charlie.create_magic_field(name: "age", datatype: :integer)
       @charlie.age = "no_integer"
 
+      expect(@charlie.age).to eq(0)
       expect(@charlie.save).to be(true)
+      expect(Person.find(@charlie.id).age).to eq(0)
       expect(@charlie.age).to eq(0)
     end
 
@@ -85,24 +128,40 @@ describe HasMagicFields do
       @charlie.create_magic_field(name: "retired", datatype: :boolean)
       @charlie.retired = false
 
+      expect(@charlie.retired).to eq(false)
       expect(@charlie.save).to be(true)
       expect(@charlie.retired).to be(false)
+      expect(Person.find(@charlie.id).retired).to be(false)
     end
 
-    it "allows datatype to be :boolean valid" do
+    it "allows datatype to be valid :boolean" do
       @charlie.create_magic_field(name: "retired", datatype: :boolean)
       @charlie.retired = "t"
 
+      expect(@charlie.retired).to eq(true)
       expect(@charlie.save).to be(true)
       expect(@charlie.retired).to be(true)
+      expect(Person.find(@charlie.id).retired).to be(true)
+    end
+
+    it "allows datatype to be valid :boolean" do
+      @charlie.create_magic_field(name: "retired", datatype: :boolean)
+      @charlie.retired = "f"
+
+      expect(@charlie.retired).to eq(false)
+      expect(@charlie.save).to be(true)
+      expect(@charlie.retired).to be(false)
+      expect(Person.find(@charlie.id).retired).to be(false)
     end
 
     it "allows datatype to be :float" do
       @charlie.create_magic_field(name: "number", datatype: :float)
       @charlie.number = "10.51"
 
+      expect(@charlie.number).to be(10.51)
       expect(@charlie.save).to be(true)
       expect(@charlie.number).to be(10.51)
+      expect(Person.find(@charlie.id).number).to be(10.51)
     end
 
     it "allows default to be set" do
@@ -111,7 +170,7 @@ describe HasMagicFields do
       expect(@charlie.bonus).to eq("40000")
     end
 
-    it "allows a pretty display name to be set" do
+    it "allows a label to be set" do
       @charlie.create_magic_field(name: "zip", label: "Zip Code")
 
       expect(@charlie.magic_fields.last.label).to eq("Zip Code")
@@ -123,6 +182,18 @@ describe HasMagicFields do
       @charlie.save
 
       expect(@charlie.reload.age).to eq(12)
+    end
+
+    it "allows to be updated" do
+      @charlie.create_magic_field(name: "age", datatype: :integer)
+      @charlie.age = 12
+      @charlie.save
+
+      @charlie.age = 15
+      @charlie.save
+
+      expect(@charlie.reload.age).to eq(15)
+      expect(Person.find(@charlie.id).age).to eq(15)
     end
   end
 
@@ -174,7 +245,7 @@ describe HasMagicFields do
       expect(@alice.birthday).not_to eq(@bob.birthday)
     end
 
-    it "defferent model has defferent scope" do
+    it "different model has different scope" do
       @alice.create_magic_field(name: "salary")
 
       expect { @alice.salary }.not_to raise_error
@@ -195,6 +266,65 @@ describe HasMagicFields do
       expect { @bob.create_magic_field(name: "salary") }.to raise_error
       expect { @product.create_magic_field(name: "salary") }.not_to raise_error
       expect { @account.create_magic_field(name: "salary") }.not_to raise_error
+    end
+
+    it "ignores when belongs_to is missing" do
+      @account.create_magic_field(name: "age", type_scoped: "User")
+
+      expect { Product.create(name: "some") }.not_to raise_error
+    end
+  end
+
+  context "N + 1" do
+    context "with empty calls" do
+      it "doesn't send unnecessary requests in #valid?" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer, required: true)
+
+        expect {
+          charlie.valid?
+        }.not_to exceed_query_limit(1)
+      end
+
+      it "doesn't send unnecessary requests in setter" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer)
+
+        expect {
+          charlie.salary = 12
+        }.not_to exceed_query_limit(2)
+      end
+
+      it "doesn't send unnecessary requests in reader" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer)
+
+        expect {
+          charlie.salary
+        }.not_to exceed_query_limit(1)
+      end
+    end
+
+    context "with previous calls" do
+      it "doesn't send unnecessary requests in reader when build MagicAttribute" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer)
+        charlie.salary = 12
+
+        expect {
+          charlie.salary
+        }.not_to exceed_query_limit(0)
+      end
+
+      it "doesn't send unnecessary requests in setter" do
+        charlie = Person.create(name: "charlie")
+        charlie.create_magic_field(name: "salary", datatype: :integer)
+        charlie.salary = 1
+
+        expect {
+          charlie.salary = 2
+        }.not_to exceed_query_limit(0)
+      end
     end
   end
 end

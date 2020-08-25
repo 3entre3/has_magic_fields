@@ -15,33 +15,27 @@ class AddHasMagicFieldsTables < migrate
       t.column :include_blank, :boolean, default: false
       t.column :allow_other, :boolean, default: true
       t.column :type_scoped, :string
-      t.column :created_at, :datetime
-      t.column :updated_at, :datetime
+      t.timestamps
     end
 
     create_table :magic_attributes do |t|
-      t.column :magic_field_id, :integer
+      t.references :magic_field, foreign_key: true
       t.column :value, :string
-      t.column :created_at, :datetime
-      t.column :updated_at, :datetime
+      t.timestamps
     end
 
     create_table :magic_field_relationships do |t|
-      t.column :magic_field_id, :integer
-      t.column :owner_id, :integer
-      t.column :owner_type, :string
+      t.references :magic_field, foreign_key: true
+      t.references :owner, polymorphic: true
       t.column :name, :string
       t.column :type_scoped, :string
-      t.column :created_at, :datetime
-      t.column :updated_at, :datetime
+      t.timestamps
     end
 
     create_table :magic_attribute_relationships do |t|
-      t.column :magic_attribute_id, :integer
-      t.column :owner_id, :integer
-      t.column :owner_type, :string
-      t.column :created_at, :datetime
-      t.column :updated_at, :datetime
+      t.references :magic_attribute, foreign_key: true
+      t.references :owner, polymorphic: true
+      t.timestamps
     end
 
     add_index :magic_attribute_relationships, [:magic_attribute_id, :owner_id, :owner_type], name: "magic_attribute_id_owner", unique: true

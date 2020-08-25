@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "rspec-sqlimit"
 require "database_cleaner"
 require "rubygems"
 require "active_record"

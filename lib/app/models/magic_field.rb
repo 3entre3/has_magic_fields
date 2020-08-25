@@ -10,14 +10,21 @@ class MagicField < ActiveRecord::Base
 
   before_save :set_label
 
-  def type_cast(value)
-    type = ActiveRecord::Type.lookup(datatype.to_sym)
-    ActiveModel::Attribute.from_database(name, value, type).value
-  rescue
-    value
+  def serialize_value(value)
+    find_type.serialize(value).to_s
   end
+
+  def type_cast(value)
+    find_type.cast(value)
+  end
+
+  private
 
   def set_label
     self.label = name.humanize if label.blank?
+  end
+
+  def find_type
+    ActiveRecord::Type.lookup(datatype.to_sym)
   end
 end
