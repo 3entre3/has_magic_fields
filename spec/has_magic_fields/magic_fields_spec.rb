@@ -85,10 +85,14 @@ describe HasMagicFields do
 
     it "allows datatype to be :date" do
       @charlie.create_magic_field(name: "birthday", datatype: :date)
+      today = Date.today
       @charlie.birthday = Date.today
 
+      expect(@charlie.birthday).to eq(today)
       expect(@charlie.save).to be(true)
       expect(@charlie.birthday.class.name).to eq("Date")
+      expect(@charlie.birthday).to eq(today)
+      expect(Person.find(@charlie.id).birthday).to eq(today)
     end
 
     it "allows datatype to be :datetime" do
@@ -104,15 +108,19 @@ describe HasMagicFields do
       @charlie.create_magic_field(name: "age", datatype: :integer)
       @charlie.age = 5
 
+      expect(@charlie.age).to eq(5)
       expect(@charlie.save).to be(true)
       expect(@charlie.age.class.name).to eq("Integer")
+      expect(Person.find(@charlie.id).age).to eq(5)
     end
 
     it "casts datatype to :integer" do
       @charlie.create_magic_field(name: "age", datatype: :integer)
       @charlie.age = "no_integer"
 
+      expect(@charlie.age).to eq(0)
       expect(@charlie.save).to be(true)
+      expect(Person.find(@charlie.id).age).to eq(0)
       expect(@charlie.age).to eq(0)
     end
 
@@ -120,24 +128,40 @@ describe HasMagicFields do
       @charlie.create_magic_field(name: "retired", datatype: :boolean)
       @charlie.retired = false
 
+      expect(@charlie.retired).to eq(false)
       expect(@charlie.save).to be(true)
       expect(@charlie.retired).to be(false)
+      expect(Person.find(@charlie.id).retired).to be(false)
     end
 
     it "allows datatype to be valid :boolean" do
       @charlie.create_magic_field(name: "retired", datatype: :boolean)
       @charlie.retired = "t"
 
+      expect(@charlie.retired).to eq(true)
       expect(@charlie.save).to be(true)
       expect(@charlie.retired).to be(true)
+      expect(Person.find(@charlie.id).retired).to be(true)
+    end
+
+    it "allows datatype to be valid :boolean" do
+      @charlie.create_magic_field(name: "retired", datatype: :boolean)
+      @charlie.retired = "f"
+
+      expect(@charlie.retired).to eq(false)
+      expect(@charlie.save).to be(true)
+      expect(@charlie.retired).to be(false)
+      expect(Person.find(@charlie.id).retired).to be(false)
     end
 
     it "allows datatype to be :float" do
       @charlie.create_magic_field(name: "number", datatype: :float)
       @charlie.number = "10.51"
 
+      expect(@charlie.number).to be(10.51)
       expect(@charlie.save).to be(true)
       expect(@charlie.number).to be(10.51)
+      expect(Person.find(@charlie.id).number).to be(10.51)
     end
 
     it "allows default to be set" do
