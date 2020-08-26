@@ -6,6 +6,10 @@ loader = Zeitwerk::Loader.for_gem
 loader.do_not_eager_load("#{__dir__}/generators")
 loader.push_dir("#{__dir__}/../app/models")
 loader.setup
+
+module HasMagicFields
+end
+
 loader.eager_load
 
 require "has_magic_fields/version"
