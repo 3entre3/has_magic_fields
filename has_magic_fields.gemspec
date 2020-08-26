@@ -1,9 +1,7 @@
 # coding: utf-8
 # frozen_string_literal: true
 
-lib = File.expand_path("../lib", __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "has_magic_fields/version"
+require_relative "lib/has_magic_fields/version"
 
 Gem::Specification.new do |s|
   s.name          = "has_magic_fields"
@@ -15,12 +13,13 @@ Gem::Specification.new do |s|
   s.homepage      = "https://github.com/ikeqiao/has_magic_fields"
   s.license       = "MIT"
 
-  s.files         = `git ls-files`.split($/)
+  s.files         = Dir["*.{md,txt}", "{app,config,lib}/**/*"]
   s.executables   = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
   s.test_files    = s.files.grep(%r{^(test|s|features)/})
-  s.require_paths = ["lib"]
+  s.require_path = "lib"
 
   s.add_development_dependency "bundler", "~> 1.3"
   s.add_development_dependency "rake"
   s.add_dependency("rails", [">= 4.0.0"])
+  s.add_runtime_dependency("zeitwerk", "~> 2.2")
 end
